@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class WebfluxexampleApplication {
+public class AirportServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(WebfluxexampleApplication.class, args);
+		SpringApplication.run(AirportServiceApplication.class, args);
 	}
 
 }

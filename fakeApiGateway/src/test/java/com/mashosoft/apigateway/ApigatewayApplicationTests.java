@@ -1,10 +1,10 @@
-package com.mashosoft.webfluxexample;
+package com.mashosoft.apigateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class WebfluxexampleApplicationTests {
+class ApigatewayApplicationTests {
 
 	@Test
 	void contextLoads() {
