@@ -1,17 +1,20 @@
-# Getting Started
+# Spring webflux demo
 
-### Reference Documentation
-For further reference, please consider the following sections:
+The purpose of this demo is creating two Microservices, airports and flights that will expose reactive APIs
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/3.2.5/maven-plugin/reference/html/)
-* [Create an OCI image](https://docs.spring.io/spring-boot/docs/3.2.5/maven-plugin/reference/html/#build-image)
-* [Spring Data Reactive MongoDB](https://docs.spring.io/spring-boot/docs/3.2.5/reference/htmlsingle/index.html#data.nosql.mongodb)
-* [Spring Reactive Web](https://docs.spring.io/spring-boot/docs/3.2.5/reference/htmlsingle/index.html#web.reactive)
+Then the fake api gateway will not just route this reactive endpoints but also add a new api composition pattern endpoint
+in which the flights and airport information will be combined.
 
-### Guides
-The following guides illustrate how to use some features concretely:
+The databases will be MongoDbs database with the reactive driver.
+In the future we may change one mongo to one postgress to also learn how to do it with a SQL driver
 
-* [Accessing Data with MongoDB](https://spring.io/guides/gs/accessing-data-mongodb/)
-* [Building a Reactive RESTful Web Service](https://spring.io/guides/gs/reactive-rest-service/)
+## Example
 
+For example: in the flights subdomain model the departure and landing airport will store only the airport code
+in airports microservice it will have detailed information about each airport. The point will be to combine with each
+flight, information of the airport in a specific DTO.
+
+All of this should be better in performance using reactives APIs because we will subscribe to the endpoint doing a fork
+join at the end
+
+TODO: Add a draw in the future
