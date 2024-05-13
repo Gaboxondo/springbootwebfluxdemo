@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+
 @RestController
 @RequestMapping("/v1/flights")
 @AllArgsConstructor
@@ -22,7 +24,7 @@ public class FlightsController {
     @GetMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
     @Operation(description = "Get all flights")
     public Flux<FlightDTO> getAll(){
-        return flightsWebAdapter.getAll(  );
+        return flightsWebAdapter.getAll(  ).delayElements( Duration.ofSeconds( 1 ) );
     }
 
     @GetMapping(value = "/{departureAirportCode}/{landingAirportCode}/cheapest",produces = MediaType.APPLICATION_NDJSON_VALUE)
