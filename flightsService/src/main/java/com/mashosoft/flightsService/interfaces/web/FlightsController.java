@@ -11,6 +11,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/v1/flights")
 @AllArgsConstructor
@@ -29,6 +31,7 @@ public class FlightsController {
     public Mono<FlightDTO> insertFlight(@RequestBody CreateFlightDTO createFlightDTO){
         FlightMongo flightMongo = new FlightMongo();
         BeanUtils.copyProperties( createFlightDTO,flightMongo );
+        flightMongo.setId( UUID.randomUUID().toString() );
         Mono<FlightMongo> flightMongoMono = flightMongoReactiveRepository.save( flightMongo ).log();
         return flightMongoMono.map( flightMongoSaved -> {
             FlightDTO flightDTO = new FlightDTO();
