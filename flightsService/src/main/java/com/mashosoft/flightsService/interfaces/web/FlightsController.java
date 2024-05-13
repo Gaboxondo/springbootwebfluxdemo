@@ -26,14 +26,14 @@ public class FlightsController {
     @Operation(description = "Get all flights")
     @ResponseStatus(HttpStatus.OK)
     public Flux<FlightDTO> getAll(){
-        return flightsWebAdapter.getAll(  ).delayElements( Duration.ofSeconds( 1 ) );
+        return flightsWebAdapter.getAll(  ).delayElements( Duration.ofSeconds( 1 ) ).log();
     }
 
     @GetMapping(value = "/{departureAirportCode}/{landingAirportCode}/cheapest",produces = MediaType.APPLICATION_NDJSON_VALUE)
     @Operation(description = "Get the cheapest price for an specific")
     @ResponseStatus(HttpStatus.OK)
     public Mono<FlightDTO> getTheCheapest(@PathVariable String departureAirportCode,@PathVariable String landingAirportCode){
-        return flightsWebAdapter.findCheapest( departureAirportCode,landingAirportCode );
+        return flightsWebAdapter.findCheapest( departureAirportCode,landingAirportCode ).log();
     }
 
     // Create new Product
@@ -41,7 +41,7 @@ public class FlightsController {
     @Operation(description = "Register a new flight")
     @ResponseStatus(HttpStatus.OK)
     public Mono<FlightDTO> insertFlight(@RequestBody CreateFlightDTO createFlightDTO){
-        return flightsWebAdapter.create( createFlightDTO );
+        return flightsWebAdapter.create( createFlightDTO ).log();
     }
 
 }
