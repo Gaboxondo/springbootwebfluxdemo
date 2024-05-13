@@ -1,7 +1,9 @@
 package com.mashosoft.flightsService.config.exceptionHandling.handler;
 
-import com.mashosoft.flightsService.config.exceptionHandling.handler.model.ExceptionDTO;
-import com.mashosoft.flightsService.config.exceptionHandling.model.exception.BussinessException;
+import com.mashosoft.flightsService.config.exceptionHandling.handler.model.ControlledErrorResponseDTO;
+import com.mashosoft.flightsService.config.exceptionHandling.handler.model.NoResultsDTO;
+import com.mashosoft.flightsService.config.exceptionHandling.model.exception.ControlledErrorException;
+import com.mashosoft.flightsService.config.exceptionHandling.model.exception.NoResultException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,38 +25,44 @@ public class MainControllerExceptionHandler {
     private String appname;
 
 
-    @ExceptionHandler(BussinessException.class)
+    @ExceptionHandler(ControlledErrorException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ExceptionDTO handleException(BussinessException ex) {
-        return new ExceptionDTO(ex.getErrorCode(),ex.getErrorMessage());
+    public ControlledErrorResponseDTO handleException(ControlledErrorException ex) {
+        return new ControlledErrorResponseDTO(ex.getErrorCode(),ex.getErrorMessage());
+    }
+
+    @ExceptionHandler(NoResultException.class)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public NoResultsDTO handleException(NoResultException ex) {
+        return NoResultsDTO.builder().errorMessage( "No results for the request" ).build();
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ExceptionDTO handleException(HttpMessageNotReadableException ex) {
+    public ControlledErrorResponseDTO handleException(HttpMessageNotReadableException ex) {
         if(appname == null || appname.isBlank()){
             appname = "AppNameNotSet";
         }
         String errorMessage = "Wrong Body in the request, please check the API definition";
-        return new ExceptionDTO("uw.error." + appname + ".httpBody.00",errorMessage);
+        return new ControlledErrorResponseDTO( "uw.error." + appname + ".httpBody.00",errorMessage);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ExceptionDTO handleException(MethodArgumentNotValidException ex) {
+    public ControlledErrorResponseDTO handleException(MethodArgumentNotValidException ex) {
         if(appname == null || appname.isBlank()){
             appname = "AppNameNotSet";
         }
-        return new ExceptionDTO("uw.error." + appname + ".http.arguments.00","Not Valid Argument " + ex.getParameter());
+        return new ControlledErrorResponseDTO( "uw.error." + appname + ".http.arguments.00", "Not Valid Argument " + ex.getParameter());
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ExceptionDTO handleException(Exception ex) {
+    public ControlledErrorResponseDTO handleException(Exception ex) {
         LOGGER.error( "context: ",ex );
         if(appname == null || appname.isBlank()){
             appname = "AppNameNotSet";
         }
-        return new ExceptionDTO("uw.error." + appname + ".generic","Es ist ein Fehler aufgetreten. Bitte kontaktieren Sie den Support.");
+        return new ControlledErrorResponseDTO( "uw.error." + appname + ".generic","Es ist ein Fehler aufgetreten. Bitte kontaktieren Sie den Support.");
     }
 }
