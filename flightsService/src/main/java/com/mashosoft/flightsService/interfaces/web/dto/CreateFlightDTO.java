@@ -13,5 +13,6 @@ public class CreateFlightDTO {
 
     private String departureAirportCode;
     private String landingAirportCode;
+    private Double price;
 
 }

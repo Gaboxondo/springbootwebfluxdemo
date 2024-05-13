@@ -18,5 +18,6 @@ public class FlightMongo {
     private String id;
     private String departureAirportCode;
     private String landingAirportCode;
+    private Double price;
 
 }
