@@ -6,6 +6,7 @@ import com.mashosoft.flightsService.interfaces.web.adapter.FlightsWebAdapter;
 import com.mashosoft.flightsService.interfaces.web.dto.CreateFlightDTO;
 import com.mashosoft.flightsService.interfaces.web.dto.FlightDTO;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
