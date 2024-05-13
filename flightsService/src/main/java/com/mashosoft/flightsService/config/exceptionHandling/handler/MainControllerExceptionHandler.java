@@ -2,6 +2,7 @@ package com.mashosoft.flightsService.config.exceptionHandling.handler;
 
 import com.mashosoft.flightsService.config.exceptionHandling.handler.model.ControlledErrorResponseDTO;
 import com.mashosoft.flightsService.config.exceptionHandling.handler.model.NoResultsDTO;
+import com.mashosoft.flightsService.config.exceptionHandling.handler.model.ServerErrorResponseDTO;
 import com.mashosoft.flightsService.config.exceptionHandling.model.exception.ControlledErrorException;
 import com.mashosoft.flightsService.config.exceptionHandling.model.exception.NoResultException;
 import org.slf4j.Logger;
@@ -58,11 +59,12 @@ public class MainControllerExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ControlledErrorResponseDTO handleException(Exception ex) {
+    public ServerErrorResponseDTO handleException(Exception ex) {
         LOGGER.error( "context: ",ex );
         if(appname == null || appname.isBlank()){
             appname = "AppNameNotSet";
         }
-        return new ControlledErrorResponseDTO( "uw.error." + appname + ".generic","Es ist ein Fehler aufgetreten. Bitte kontaktieren Sie den Support.");
+        //Here the thing would be also to add the request key, but in this case no request keys are generated
+        return new ServerErrorResponseDTO("SERVER_ERROR","server error, please contact with support");
     }
 }

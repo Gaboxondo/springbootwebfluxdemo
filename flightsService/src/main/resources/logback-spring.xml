@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+    <property resource="application.yaml"/>
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{ISO8601} %level class=%logger %msg%n%throwable</Pattern>
+        </layout>
+    </appender>
+    <logger name="com.mashosoft.flightsService" level="DEBUG"
+            additivity="false">
+        <appender-ref ref="Console"/>
+    </logger>
+    <logger name="org.mongodb.driver.cluster" level="INFO"
+            additivity="false">
+        <appender-ref ref="Console"/>
+    </logger>
+    <logger name="rg.springframework.boot.web.embedded.netty.NettyWebServer" level="INFO"
+            additivity="false">
+        <appender-ref ref="Console"/>
+    </logger>
+    <Root level="ERROR" additivity="false">
+        <appender-ref ref="Console"/>
+    </Root>
+</configuration>
