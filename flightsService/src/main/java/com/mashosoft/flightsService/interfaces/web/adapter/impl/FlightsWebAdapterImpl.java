@@ -10,6 +10,7 @@ import com.mashosoft.flightsService.interfaces.web.dto.FlightDTO;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -20,7 +21,7 @@ public class FlightsWebAdapterImpl implements FlightsWebAdapter {
     private final FlightsAdapterMapper flightsAdapterMapper;
 
     @Override
-    public Mono<FlightDTO> createFlight(CreateFlightDTO createFlightDTO) {
+    public Mono<FlightDTO> create(CreateFlightDTO createFlightDTO) {
         Mono<Flight> flightMono = flightsService.createFlight( createFlightDTO.getDepartureAirportCode(),
             createFlightDTO.getLandingAirportCode(), createFlightDTO.getPrice() );
         return flightMono.map( flightsAdapterMapper::fromDomainToDTO );
@@ -36,5 +37,11 @@ public class FlightsWebAdapterImpl implements FlightsWebAdapter {
         }
         Mono<Flight> flightMono = flightsService.getCheapest( departureAirport,landingAirport);
         return flightMono.map( flightsAdapterMapper::fromDomainToDTO );
+    }
+
+    @Override
+    public Flux<FlightDTO> getAll() {
+        Flux<Flight> flightFlux = flightsService.getAll();
+        return flightFlux.map( flightsAdapterMapper::fromDomainToDTO );
     }
 }

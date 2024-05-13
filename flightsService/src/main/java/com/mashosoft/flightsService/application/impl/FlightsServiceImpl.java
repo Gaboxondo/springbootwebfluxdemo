@@ -37,4 +37,9 @@ public class FlightsServiceImpl implements FlightsService {
                 }
             });
     }
+
+    @Override
+    public Flux<Flight> getAll() {
+        return flightRepository.getAll();
+    }
 }
