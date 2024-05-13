@@ -34,8 +34,8 @@ public class FlightsController {
 
     @GetMapping(value = "/{departureAirportCode}/{landingAirportCode}/cheapest",produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
     @Operation(description = "Get the cheapest price for an specific")
-    public Mono<FlightMongo> getAllFlights(@PathVariable String departureAirportCode,@PathVariable String landingAirportCode){
-        return null;
+    public Mono<FlightDTO> getTheCheapest(@PathVariable String departureAirportCode,@PathVariable String landingAirportCode){
+        return flightsWebAdapter.findCheapest( departureAirportCode,landingAirportCode );
     }
 
     // Create new Product

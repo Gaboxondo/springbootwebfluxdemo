@@ -23,4 +23,10 @@ public class FlightsWebAdapterImpl implements FlightsWebAdapter {
             createFlightDTO.getLandingAirportCode(), createFlightDTO.getPrice() );
         return flightMono.map( flightsAdapterMapper::fromDomainToDTO );
     }
+
+    @Override
+    public Mono<FlightDTO> findCheapest(String departureAirport, String landingAirport) {
+        Mono<Flight> flightMono = flightsService.getCheapest( departureAirport,landingAirport);
+        return flightMono.map( flightsAdapterMapper::fromDomainToDTO );
+    }
 }

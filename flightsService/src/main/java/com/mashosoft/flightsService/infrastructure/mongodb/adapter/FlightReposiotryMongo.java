@@ -7,6 +7,7 @@ import com.mashosoft.flightsService.infrastructure.mongodb.entity.FlightMongo;
 import com.mashosoft.flightsService.infrastructure.mongodb.repository.FlightMongoReactiveRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -21,5 +22,11 @@ public class FlightReposiotryMongo implements FlightRepository {
         FlightMongo flightMongo = flightMongoMapper.fromDomainToMongo( flight );
         Mono<FlightMongo> flightMongoMono = flightMongoReactiveRepository.save( flightMongo );
         return flightMongoMono.map( flightMongoMapper::fromMongoToDomain );
+    }
+
+    @Override
+    public Flux<Flight> getAll() {
+        Flux<FlightMongo> allFlights = flightMongoReactiveRepository.findAll();
+        return allFlights.map( flightMongoMapper::fromMongoToDomain );
     }
 }

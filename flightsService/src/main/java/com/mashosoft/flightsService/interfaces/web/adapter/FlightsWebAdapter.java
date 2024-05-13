@@ -7,4 +7,6 @@ import reactor.core.publisher.Mono;
 public interface FlightsWebAdapter {
 
     public Mono<FlightDTO> createFlight(CreateFlightDTO createFlightDTO);
+
+    public Mono<FlightDTO> findCheapest(String departureAirport,String landingAirport);
 }

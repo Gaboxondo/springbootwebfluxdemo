@@ -6,4 +6,6 @@ import reactor.core.publisher.Mono;
 public interface FlightsService {
 
     public Mono<Flight> createFlight(String departureAirport,String landingAirport,Double price);
+
+    public Mono<Flight> getCheapest(String departureAirport,String landingAirport);
 }
