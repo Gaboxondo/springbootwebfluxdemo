@@ -1,14 +1,13 @@
 package com.mashosoft.flightsService.config.exceptionHandling.handler;
 
 import com.mashosoft.flightsService.config.exceptionHandling.handler.model.ControlledErrorResponseDTO;
-import com.mashosoft.flightsService.config.exceptionHandling.handler.model.NoResultsDTO;
 import com.mashosoft.flightsService.config.exceptionHandling.handler.model.ServerErrorResponseDTO;
 import com.mashosoft.flightsService.config.exceptionHandling.model.exception.ControlledErrorException;
-import com.mashosoft.flightsService.config.exceptionHandling.model.exception.NoResultException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -27,15 +26,9 @@ public class MainControllerExceptionHandler {
 
 
     @ExceptionHandler(ControlledErrorException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ControlledErrorResponseDTO handleException(ControlledErrorException ex) {
-        return new ControlledErrorResponseDTO(ex.getErrorCode(),ex.getErrorMessage());
-    }
-
-    @ExceptionHandler(NoResultException.class)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public NoResultsDTO handleException(NoResultException ex) {
-        return NoResultsDTO.builder().errorMessage( "No results for the request" ).build();
+    public ResponseEntity<ControlledErrorResponseDTO> handleException(ControlledErrorException ex) {
+        ControlledErrorResponseDTO controlledErrorException = new ControlledErrorResponseDTO( ex.getErrorCode(),ex.getErrorMessage() );
+        return new ResponseEntity<>(controlledErrorException,ex.getHttpStatusResponse() );
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
