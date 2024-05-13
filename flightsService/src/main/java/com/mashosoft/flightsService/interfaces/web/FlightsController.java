@@ -21,18 +21,6 @@ public class FlightsController {
     private final FlightMongoReactiveRepository flightMongoReactiveRepository;
     private final FlightsWebAdapter flightsWebAdapter;
 
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
-    @Operation(description = "Get a flight By id")
-    public Mono<FlightMongo> getFlight(@PathVariable String id){
-        return null;
-    }
-
-    @GetMapping(produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
-    @Operation(description = "Get all flights")
-    public Flux<FlightMongo> getAllFlights(){
-        return null;
-    }
-
     @GetMapping(value = "/{departureAirportCode}/{landingAirportCode}/cheapest",produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
     @Operation(description = "Get the cheapest price for an specific")
     public Mono<FlightDTO> getTheCheapest(@PathVariable String departureAirportCode,@PathVariable String landingAirportCode){
