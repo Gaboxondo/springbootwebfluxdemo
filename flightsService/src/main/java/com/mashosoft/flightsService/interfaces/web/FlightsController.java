@@ -5,6 +5,7 @@ import com.mashosoft.flightsService.infrastructure.mongodb.entity.FlightMongo;
 import com.mashosoft.flightsService.infrastructure.mongodb.repository.FlightMongoReactiveRepository;
 import com.mashosoft.flightsService.interfaces.web.dto.CreateFlightDTO;
 import com.mashosoft.flightsService.interfaces.web.dto.FlightDTO;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class FlightsController {
 
     // Create new Product
     @PostMapping
+    @Operation(description = "Register a new flight")
     public Mono<FlightDTO> insertFlight(@RequestBody CreateFlightDTO createFlightDTO){
         FlightMongo flightMongo = new FlightMongo();
         BeanUtils.copyProperties( createFlightDTO,flightMongo );
