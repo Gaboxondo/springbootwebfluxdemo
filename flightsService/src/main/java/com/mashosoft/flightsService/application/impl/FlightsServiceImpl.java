@@ -1,6 +1,7 @@
 package com.mashosoft.flightsService.application.impl;
 
 import com.mashosoft.flightsService.application.FlightsService;
+import com.mashosoft.flightsService.config.exceptionHandling.model.exception.ControlledErrorException;
 import com.mashosoft.flightsService.domain.model.Flight;
 import com.mashosoft.flightsService.domain.model.FlightFactory;
 import com.mashosoft.flightsService.domain.repository.FlightRepository;
@@ -29,11 +30,10 @@ public class FlightsServiceImpl implements FlightsService {
         Mono<Boolean> landingCodeMonoValid = airportsService.airportCodeIsValid( landingAirportCode );
         return Mono.zip(departCodeMonoValid,landingCodeMonoValid )
             .flatMap( data-> {
-                if(data.getT1() && data.getT2() == false){
-                    throw new ...
-                        //probar con el Mono.error()
+                if(!(data.getT1() && data.getT2())){
+                    throw new ControlledErrorException( "error.code.09","the airports codes are not valid" );
                 }
-            return flightRepository.saveFlight( flightfactory.createFlight( departureAirportCode,landingAirportCode,price ) )
+            return flightRepository.saveFlight( flightfactory.createFlight( departureAirportCode,landingAirportCode,price ) );
         });
     }
 
