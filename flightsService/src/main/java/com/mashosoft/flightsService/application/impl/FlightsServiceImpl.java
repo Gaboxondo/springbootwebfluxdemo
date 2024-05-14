@@ -31,7 +31,7 @@ public class FlightsServiceImpl implements FlightsService {
             .flatMap( data-> {
                 if(data.getT1() && data.getT2() == false){
                     throw new ...
-                        //probar con el Mono
+                        //probar con el Mono.error()
                 }
             return flightRepository.saveFlight( flightfactory.createFlight( departureAirportCode,landingAirportCode,price ) )
         });
