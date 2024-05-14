@@ -6,13 +6,17 @@ import com.mashosoft.flightsService.domain.model.FlightFactory;
 import com.mashosoft.flightsService.domain.repository.FlightRepository;
 import com.mashosoft.flightsService.domain.service.AirportsService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
+@Slf4j
 public class FlightsServiceImpl implements FlightsService {
 
     private final FlightRepository flightRepository;
@@ -21,7 +25,11 @@ public class FlightsServiceImpl implements FlightsService {
 
     @Override
     public Mono<Flight> createFlight(String departureAirportCode, String landingAirportCode, Double price) {
-        Mono<Boolean> landingAirportCodeValidMono = airportsService.airportCodeIsValid( departureAirportCode );
+        Mono<Boolean> departCodeMonoValid = airportsService.airportCodeIsValid( departureAirportCode );
+        Mono<Boolean> landingCodeMonoValid = airportsService.airportCodeIsValid( landingAirportCode );
+        Mono<Boolean> validCodesMono = Mono.zip(departCodeMonoValid,landingCodeMonoValid )
+            .flatMap( data-> Mono.just( data.getT1() && data.getT2()) );
+        Boolean validCode = validCodesMono.block();
         return flightRepository.saveFlight( flightfactory.createFlight( departureAirportCode,landingAirportCode,price ) );
     }
 

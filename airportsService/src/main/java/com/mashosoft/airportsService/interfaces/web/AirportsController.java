@@ -21,9 +21,9 @@ public class AirportsController {
     @ResponseStatus(HttpStatus.OK)
     public Mono<Boolean> validateAirportCode(@PathVariable String airportCode){
         if(validCodes.contains( airportCode )){
-            return Mono.just( true );
+            return Mono.just( true ).log();
         }else {
-            return Mono.just( false );
+            return Mono.just( false ).log();
         }
     }
 }
