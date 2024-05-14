@@ -29,7 +29,7 @@ public class FlightsServiceImpl implements FlightsService {
         Mono<Boolean> landingCodeMonoValid = airportsService.airportCodeIsValid( landingAirportCode );
         Mono<Boolean> validCodesMono = Mono.zip(departCodeMonoValid,landingCodeMonoValid )
             .flatMap( data-> Mono.just( data.getT1() && data.getT2()) );
-        Boolean validCode = validCodesMono.block();
+        validCodesMono.subscribe(response -> System.out.println("response mono combined: " + response));
         return flightRepository.saveFlight( flightfactory.createFlight( departureAirportCode,landingAirportCode,price ) );
     }
 
