@@ -16,7 +16,7 @@ public class AirportsController {
 
     private static final List<String> validCodes = List.of("MLG","ROM");
 
-    @GetMapping(value = "/validate/{airportCode}",produces = MediaType.APPLICATION_NDJSON_VALUE)
+    @GetMapping(value = "/validate/{airportCode}",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(description = "Indicates if the airport code is valid or not")
     @ResponseStatus(HttpStatus.OK)
     public Mono<Boolean> validateAirportCode(@PathVariable String airportCode){

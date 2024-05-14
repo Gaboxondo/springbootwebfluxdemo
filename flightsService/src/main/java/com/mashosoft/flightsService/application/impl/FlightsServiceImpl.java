@@ -4,6 +4,7 @@ import com.mashosoft.flightsService.application.FlightsService;
 import com.mashosoft.flightsService.domain.model.Flight;
 import com.mashosoft.flightsService.domain.model.FlightFactory;
 import com.mashosoft.flightsService.domain.repository.FlightRepository;
+import com.mashosoft.flightsService.domain.service.AirportsService;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,11 @@ public class FlightsServiceImpl implements FlightsService {
 
     private final FlightRepository flightRepository;
     private final FlightFactory flightfactory;
+    private final AirportsService airportsService;
 
     @Override
     public Mono<Flight> createFlight(String departureAirportCode, String landingAirportCode, Double price) {
+        Mono<Boolean> landingAirportCodeValidMono = airportsService.airportCodeIsValid( departureAirportCode );
         return flightRepository.saveFlight( flightfactory.createFlight( departureAirportCode,landingAirportCode,price ) );
     }
 
