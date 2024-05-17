@@ -10,6 +10,3 @@ spring:
       username: flightsdbuser
       password: sa
       database: flightsdb
-springdoc:
-  swagger-ui:
-    path: "/swagger-ui.html"
