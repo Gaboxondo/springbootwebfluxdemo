@@ -42,8 +42,8 @@ public class FlightsServiceImpl implements FlightsService {
         String finalDepartureAirportCode = StringUtils.toRootUpperCase( departureAirportCode );
         String finalLandingAirportCode = StringUtils.toRootUpperCase( landingAirportCode );
         return flightRepository.getAll()
-            .filter( flight -> flight.getDepartureAirportCode().equals( finalDepartureAirportCode ) )
-            .filter( flight -> flight.getLandingAirportCode().equals( finalLandingAirportCode ) )
+            .filter( flight -> flight.getDepartureAirportCode().equals( finalDepartureAirportCode ) &&
+                               flight.getLandingAirportCode().equals( finalLandingAirportCode ))
             .reduce( (flight1,flight2) -> {
                 if(flight1.getPrice() < flight2.getPrice() || flight1.getPrice().equals( flight2.getPrice() )){
                     return flight1;
