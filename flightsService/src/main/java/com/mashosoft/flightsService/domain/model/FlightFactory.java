@@ -1,5 +1,6 @@
 package com.mashosoft.flightsService.domain.model;
 
+import com.mashosoft.flightsService.config.exceptionHandling.ErrorCodes;
 import com.mashosoft.flightsService.config.exceptionHandling.model.exception.ControlledErrorException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,19 +16,19 @@ public class FlightFactory {
         //Of course this codes should be on an enum and should be within the class
         if(StringUtils.isAllBlank( departAirportCode )){
             log.warn( "Rejected request due to departure airport was null or empty" );
-            throw new ControlledErrorException("erro.code.01","departure airport code can not be blank");
+            throw new ControlledErrorException( ErrorCodes.DEPARTURE_CODE_NULL,"departure airport code can not be blank");
         }
         if(StringUtils.isAllBlank( landingAirportCode )){
             log.warn( "Rejected request due to landing airport was null or empty" );
-            throw new ControlledErrorException("erro.code.02","landing airport code can not be blank");
+            throw new ControlledErrorException(ErrorCodes.DEPARTURE_CODE_NULL,"landing airport code can not be blank");
         }
         if(price == null){
             log.warn( "Rejected request due to price is null" );
-            throw new ControlledErrorException("erro.code.03","Price can not be null");
+            throw new ControlledErrorException(ErrorCodes.PRICE_NULL,"Price can not be null");
         }
         if(price <0){
             log.warn( "Rejected request due to price is < 0" );
-            throw new ControlledErrorException("erro.code.04","The price can not be < than 0");
+            throw new ControlledErrorException(ErrorCodes.PRICE_NEGATUVE,"The price can not be < than 0");
         }
         departAirportCode = StringUtils.toRootUpperCase( departAirportCode );
         landingAirportCode = StringUtils.toRootUpperCase( landingAirportCode );

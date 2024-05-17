@@ -1,6 +1,7 @@
 package com.mashosoft.flightsService.interfaces.web.adapter.impl;
 
 import com.mashosoft.flightsService.application.FlightsService;
+import com.mashosoft.flightsService.config.exceptionHandling.ErrorCodes;
 import com.mashosoft.flightsService.config.exceptionHandling.model.exception.ControlledErrorException;
 import com.mashosoft.flightsService.domain.model.Flight;
 import com.mashosoft.flightsService.interfaces.web.adapter.FlightsWebAdapter;
@@ -30,10 +31,10 @@ public class FlightsWebAdapterImpl implements FlightsWebAdapter {
     @Override
     public Mono<FlightDTO> findCheapest(String departureAirport, String landingAirport) {
         if(StringUtils.isAllEmpty( departureAirport )){
-           throw new ControlledErrorException( "error.api.code.01","Departure airport code can not be null or empty" );
+           throw new ControlledErrorException( ErrorCodes.DEPARTURE_CODE_NULL,"Departure airport code can not be null or empty" );
         }
         if(StringUtils.isAllEmpty( landingAirport )){
-            throw new ControlledErrorException( "error.api.code.02","Landing airport code can not be null or empty" );
+            throw new ControlledErrorException( ErrorCodes.LANDING_CODE_NULL,"Landing airport code can not be null or empty" );
         }
         Mono<Flight> flightMono = flightsService.getCheapest( departureAirport,landingAirport);
         return flightMono.map( flightsAdapterMapper::fromDomainToDTO );

@@ -1,5 +1,6 @@
 package com.mashosoft.flightsService.config.exceptionHandling.model.exception;
 
+import com.mashosoft.flightsService.config.exceptionHandling.ErrorCodes;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,8 +18,8 @@ public class ControlledErrorException extends RuntimeException{
 
     private HttpStatus httpStatusResponse;
 
-    public ControlledErrorException(String errorCode,String errorMessage){
-        this.errorCode = errorCode;
+    public ControlledErrorException(ErrorCodes errorCode,String errorMessage){
+        this.errorCode = errorCode.getCode();
         this.errorMessage = errorMessage;
         this.httpStatusResponse = HttpStatus.BAD_REQUEST;
     }
