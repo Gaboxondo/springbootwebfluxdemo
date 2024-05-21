@@ -29,4 +29,12 @@ public class AirportsController {
             return Mono.just( false ).log();
         }
     }
+
+    @GetMapping(value = "/info/{airportCode}",produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(description = "gets airports information")
+    @ResponseStatus(HttpStatus.OK)
+    public Mono<Boolean> getAirportInfo(@PathVariable String airportCode){
+        log.info("received request with airport code {}", airportCode);
+        return null;
+    }
 }
