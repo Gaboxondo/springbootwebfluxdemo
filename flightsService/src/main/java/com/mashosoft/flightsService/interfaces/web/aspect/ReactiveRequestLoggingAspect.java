@@ -6,6 +6,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -18,7 +19,7 @@ import reactor.core.publisher.Signal;
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 
-import java.util.Date;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Aspect
@@ -28,17 +29,22 @@ public class ReactiveRequestLoggingAspect {
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     WebFilter slf4jMdcFilter() {
-        return (exchange, chain) -> chain.filter(exchange).contextWrite(
-            Context.of("path", exchange.getRequest().getPath().toString()));
+        return (exchange, chain) -> {
+            String requestId = UUID.randomUUID().toString();
+            MDC.MDCCloseable trx = MDC.putCloseable("traceId", requestId);
+            return chain.filter(exchange)
+                .contextWrite( Context.of("traceId", requestId));
+        };
     }
 
     @Around("@annotation(io.swagger.v3.oas.annotations.Operation)")
     public Object logInOut(ProceedingJoinPoint joinPoint) throws Throwable {
+
         Class<?> clazz = joinPoint.getTarget().getClass();
         Logger logger = LoggerFactory.getLogger(clazz);
-
+        String methodName = joinPoint.getSignature().getDeclaringTypeName();
         logger.info("controller-direction=in method-name={}", clazz.getSimpleName());
-        Date start = new Date();
+
         Object result;
         Throwable exception = null;
 
@@ -49,9 +55,9 @@ public class ReactiveRequestLoggingAspect {
             stopWatch.stop();
             Long duration = stopWatch.getTotalTimeMillis();
             if (result instanceof Mono<?> monoOut) {
-                return logMonoResult(joinPoint, clazz, logger, start, monoOut,duration);
+                return logMonoResult(joinPoint, clazz, logger, monoOut,duration,methodName);
             } else if (result instanceof Flux<?> fluxOut) {
-                return logFluxResult(joinPoint, clazz, logger, start, fluxOut,duration);
+                return logFluxResult(joinPoint, clazz, logger, fluxOut,duration,methodName);
             } else {
                 return result;
             }
@@ -61,25 +67,25 @@ public class ReactiveRequestLoggingAspect {
         }
     }
 
-    private <T, L> Mono<T> logMonoResult(ProceedingJoinPoint joinPoint, Class<L> clazz, Logger logger, Date start, Mono<T> monoOut,Long duration) {
+    private <T, L> Mono<T> logMonoResult(ProceedingJoinPoint joinPoint, Class<L> clazz, Logger logger, Mono<T> monoOut,Long duration,String methodName) {
         return Mono.deferContextual(contextView ->
             monoOut.switchIfEmpty(Mono.<T>empty()
                     .doOnSuccess(logOnEmptyConsumer(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[empty]", null,duration))))
                     .doOnEach(logOnNext(v -> doOutputLogging(joinPoint, clazz, logger, v, null,duration)))
                     .doOnEach(logOnError(e -> doOutputLogging(joinPoint, clazz, logger, null, e,null)))
-                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[cancelled]", null,null)))
+                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[CANCEL]", null,null)))
         );
     }
 
-    private <T> Flux<T> logFluxResult(ProceedingJoinPoint joinPoint, Class<?> clazz, Logger logger, Date start, Flux<T> fluxOut,Long duration) {
+    private <T> Flux<T> logFluxResult(ProceedingJoinPoint joinPoint, Class<?> clazz, Logger logger, Flux<T> fluxOut,Long duration,String methodName) {
         return Flux.deferContextual(contextView ->
             fluxOut
                 .switchIfEmpty(Flux.<T>empty()
                     .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[empty]", null, duration))))
                     .doOnEach(logOnNext(v -> doOutputLoggingDebug(joinPoint, clazz, logger, v, duration)))
                     .doOnEach(logOnError(e -> doOutputLogging(joinPoint, clazz, logger, null, e,null)))
-                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[cancelled]", null,null)))
-                    .doOnComplete( logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[complete]", null,duration)) )
+                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[CANCEL]", null,null)))
+                    .doOnComplete( logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[COMPLETE]", null,duration)) )
         );
     }
 
@@ -88,21 +94,41 @@ public class ReactiveRequestLoggingAspect {
             if (!signal.isOnNext()) {
                 return;
             }
-            T t = signal.get();
-            logStatement.accept(t);
+            String trxIdVar = signal.getContextView().getOrDefault("traceId", "");
+            try (MDC.MDCCloseable trx = MDC.putCloseable("traceId", trxIdVar)) {
+                T t = signal.get();
+                logStatement.accept(t);
+            }
         };
     }
 
     private static <T> Consumer<Signal<T>> logOnError(Consumer<Throwable> errorLogStatement) {
-        return signal -> {errorLogStatement.accept(signal.getThrowable());};
+        return signal -> {
+            if (!signal.isOnError()) return;
+            String trxIdVar = signal.getContextView().getOrDefault("traceId", "");
+            try (MDC.MDCCloseable trx = MDC.putCloseable("traceId", trxIdVar)) {
+                errorLogStatement.accept(signal.getThrowable());
+            }
+        };
     }
 
     private static <T> Consumer<T> logOnEmptyConsumer(final ContextView contextView, Runnable logStatement) {
-        return signal -> {logStatement.run();};
+        return signal -> {
+            if (signal != null) return;
+            String trxIdVar = contextView.getOrDefault("traceId", "");
+            try (MDC.MDCCloseable trx = MDC.putCloseable("traceId", trxIdVar)) {
+                logStatement.run();
+            }
+        };
     }
 
     private static Runnable logOnEmptyRunnable(final ContextView contextView, Runnable logStatement) {
-        return logStatement::run;
+        return () -> {
+            String trxIdVar = contextView.getOrDefault("traceId", "");
+            try (MDC.MDCCloseable trx = MDC.putCloseable("traceId", trxIdVar)) {
+                logStatement.run();
+            }
+        };
     }
 
     private <T> void doOutputLogging(final ProceedingJoinPoint joinPoint, final Class<?> clazz, final Logger logger, final T responsePart, final Throwable exception, Long duration) {
