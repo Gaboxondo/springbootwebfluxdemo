@@ -76,7 +76,7 @@ public class ReactiveRequestLoggingAspect {
             fluxOut
                 .switchIfEmpty(Flux.<T>empty()
                     .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[empty]", null, duration))))
-                    .doOnEach(logOnNext(v -> doOutputLoggingDebug(joinPoint, clazz, logger, v, null, duration)))
+                    .doOnEach(logOnNext(v -> doOutputLoggingDebug(joinPoint, clazz, logger, v, duration)))
                     .doOnEach(logOnError(e -> doOutputLogging(joinPoint, clazz, logger, null, e,null)))
                     .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[cancelled]", null,null)))
                     .doOnComplete( logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[complete]", null,duration)) )
