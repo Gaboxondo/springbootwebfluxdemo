@@ -130,9 +130,8 @@ public class ReactiveRequestLoggingAspect {
             if (duration == null) {
                 duration = 0L;
             }
-            String finalResult = "[OK]";
-            logger.debug( "Controller-direction=out method-name={} bodyResponsePart={} result={} duration={}ms", clazz.getSimpleName(),
-                responsePart.toString(),finalResult, duration );
+            logger.debug( "Controller-direction=out-flux-part method-name={} bodyResponsePart={} duration={}ms", clazz.getSimpleName(),
+                responsePart.toString(), duration );
         }
     }
 }
