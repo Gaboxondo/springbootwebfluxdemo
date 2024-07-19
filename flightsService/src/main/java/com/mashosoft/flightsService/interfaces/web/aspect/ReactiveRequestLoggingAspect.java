@@ -96,10 +96,10 @@ public class ReactiveRequestLoggingAspect {
         return Flux.deferContextual(contextView ->
             fluxOut
                 .switchIfEmpty(Flux.<T>empty()
-                    .doOnEach(logOnNext(data -> doOutputLoggingDebugForFluxData( logger, data, duration, methodName)))
-                    .doOnEach(logOnError(exception -> doOutputLogging( logger,null, null, exception,null,methodName)))
                     .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, EMPTY_FLUX, null, duration,methodName))))
                     .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, COMPLETE_FLUX, null,duration,methodName)))
+                    .doOnEach(logOnNext(data -> doOutputLoggingDebugForFluxData( logger, data, duration, methodName)))
+                    .doOnEach(logOnError(exception -> doOutputLogging( logger,null, null, exception,null,methodName)))
                     .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(logger,null, CANCEL, null,null,methodName)))
         );
     }
