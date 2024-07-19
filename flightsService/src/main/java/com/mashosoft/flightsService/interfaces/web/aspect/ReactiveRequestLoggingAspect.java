@@ -38,6 +38,7 @@ public class ReactiveRequestLoggingAspect {
     private static final String CONTROLLED_ERROR = "[CONTROLLED-ERROR]";
     private static final String BUG = "[BUG]";
 
+    //FIXME: THIS IS WHAT I WILL HAVE TO SOLVE WITH MICROMETER, ALSO GET NOT PRINTED IN HANDLER
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     WebFilter slf4jMdcFilter() {
@@ -103,6 +104,38 @@ public class ReactiveRequestLoggingAspect {
         );
     }
 
+    private <T> void doOutputLogging( final Logger logger, final T responsePart,String result, final Throwable exception, Long duration,String methodName) {
+        if(exception == null) {
+            if(duration == null){
+                duration = 0L;
+            }
+
+            logger.info( "Controller-direction=out method-name={} result={} duration={}ms", methodName, result, duration );
+        }
+        else {
+            if(exception instanceof ControlledErrorException){
+                ControlledErrorException controlledErrorException = (ControlledErrorException) exception;
+                String finalResult = CONTROLLED_ERROR;
+                logger.info( "Controller-direction=out method-name={} result={} errorCode={} errorMessage={}", methodName, finalResult, controlledErrorException.getErrorCode(), controlledErrorException.getErrorMessage() );
+            } else {
+                String finalResult = BUG;
+                logger.info( "Controller-direction=out method-name={} result={} exceptionType={}, errorMessage={}", methodName, finalResult, exception.getClass().toString(), exception.getMessage() );
+            }
+        }
+    }
+
+    private <T> void doOutputLoggingDebugForFluxData( final Logger logger, final T responsePart, Long duration, String methodName) {
+        if (responsePart != null ) {
+            if (duration == null) {
+                duration = 0L;
+            }
+            logger.debug( "Controller-direction=out-flux-part method-name={} bodyResponsePart={} duration={}ms", methodName,
+                responsePart.toString(), duration );
+        }
+    }
+    //-----------------------------------------------------------------------------------------------
+
+    //FIXME: THIS IS WHAT I WILL HAVE TO SOLVE WITH MICROMETER, ALSO GET NOT PRINTED IN HANDLER
     private static <T> Consumer<Signal<T>> logOnNext(Consumer<T> logStatement) {
         return signal -> {
             if (!signal.isOnNext()) {
@@ -143,35 +176,5 @@ public class ReactiveRequestLoggingAspect {
                 logStatement.run();
             }
         };
-    }
-
-    private <T> void doOutputLogging( final Logger logger, final T responsePart,String result, final Throwable exception, Long duration,String methodName) {
-        if(exception == null) {
-            if(duration == null){
-                duration = 0L;
-            }
-
-            logger.info( "Controller-direction=out method-name={} result={} duration={}ms", methodName, result, duration );
-        }
-        else {
-            if(exception instanceof ControlledErrorException){
-                ControlledErrorException controlledErrorException = (ControlledErrorException) exception;
-                String finalResult = CONTROLLED_ERROR;
-                logger.info( "Controller-direction=out method-name={} result={} errorCode={} errorMessage={}", methodName, finalResult, controlledErrorException.getErrorCode(), controlledErrorException.getErrorMessage() );
-            } else {
-                String finalResult = BUG;
-                logger.info( "Controller-direction=out method-name={} result={} exceptionType={}, errorMessage={}", methodName, finalResult, exception.getClass().toString(), exception.getMessage() );
-            }
-        }
-    }
-
-    private <T> void doOutputLoggingDebugForFluxData( final Logger logger, final T responsePart, Long duration, String methodName) {
-        if (responsePart != null ) {
-            if (duration == null) {
-                duration = 0L;
-            }
-            logger.debug( "Controller-direction=out-flux-part method-name={} bodyResponsePart={} duration={}ms", methodName,
-                responsePart.toString(), duration );
-        }
     }
 }
