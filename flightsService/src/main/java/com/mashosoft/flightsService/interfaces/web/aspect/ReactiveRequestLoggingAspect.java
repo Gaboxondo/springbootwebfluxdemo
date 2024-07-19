@@ -108,8 +108,10 @@ public class ReactiveRequestLoggingAspect {
         if(exception == null) {
             Long finalDuration = 0L;
             if(stopWatch != null){
-                stopWatch.stop();
-                finalDuration = stopWatch.getTotalTimeNanos();
+                if(stopWatch.isRunning()) {
+                    stopWatch.stop();
+                    finalDuration = stopWatch.getTotalTimeNanos();
+                }
             }
             if(duration != null){
                 finalDuration = duration;
