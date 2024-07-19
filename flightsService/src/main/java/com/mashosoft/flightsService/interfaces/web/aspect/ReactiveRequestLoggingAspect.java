@@ -1,7 +1,6 @@
 package com.mashosoft.flightsService.interfaces.web.aspect;
 
 import com.mashosoft.flightsService.config.exceptionHandling.model.exception.ControlledErrorException;
-import com.mashosoft.flightsService.config.requestcontext.ReactiveRequestContextHolder;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
@@ -22,7 +21,6 @@ import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Aspect
@@ -37,6 +35,8 @@ public class ReactiveRequestLoggingAspect {
     private static final String EMPTY_FLUX = "[EMPTY-FLUX]";
     private static final String COMPLETE_FLUX = "[COMPLETE-FLUX]";
     private static final String CANCEL = "[CANCEL]";
+    private static final String CONTROLLED_ERROR = "[CONTROLLED-ERROR]";
+    private static final String BUG = "[BUG]";
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -95,11 +95,11 @@ public class ReactiveRequestLoggingAspect {
         return Flux.deferContextual(contextView ->
             fluxOut
                 .switchIfEmpty(Flux.<T>empty()
-                    .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, EMPTY_FLUX, null, duration,methodName))))
-                    .doOnEach(logOnNext(data -> doOutputLoggingDebug(joinPoint, clazz, logger, data, duration)))
+                    .doOnEach(logOnNext(data -> doOutputLoggingDebugForFluxData(joinPoint, clazz, logger, data, duration)))
                     .doOnEach(logOnError(exception -> doOutputLogging( logger,null, null, exception,null,methodName)))
+                    .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, EMPTY_FLUX, null, duration,methodName))))
+                    .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, COMPLETE_FLUX, null,duration,methodName)))
                     .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(logger,null, CANCEL, null,null,methodName)))
-                    .doOnComplete( logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, COMPLETE_FLUX, null,duration,methodName)) )
         );
     }
 
@@ -156,16 +156,16 @@ public class ReactiveRequestLoggingAspect {
         else {
             if(exception instanceof ControlledErrorException){
                 ControlledErrorException controlledErrorException = (ControlledErrorException) exception;
-                String finalResult = "[CONTROLLED-ERROR]";
+                String finalResult = CONTROLLED_ERROR;
                 logger.info( "Controller-direction=out method-name={} result={} errorCode={} errorMessage={}", methodName, finalResult, controlledErrorException.getErrorCode(), controlledErrorException.getErrorMessage() );
             } else {
-                String finalResult = "[BUG]";
+                String finalResult = BUG;
                 logger.info( "Controller-direction=out method-name={} result={} exceptionType={}, errorMessage={}", methodName, finalResult, exception.getClass().toString(), exception.getMessage() );
             }
         }
     }
 
-    private <T> void doOutputLoggingDebug(final ProceedingJoinPoint joinPoint, final Class<?> clazz, final Logger logger, final T responsePart, Long duration) {
+    private <T> void doOutputLoggingDebugForFluxData(final ProceedingJoinPoint joinPoint, final Class<?> clazz, final Logger logger, final T responsePart, Long duration) {
         if (responsePart != null ) {
             if (duration == null) {
                 duration = 0L;
