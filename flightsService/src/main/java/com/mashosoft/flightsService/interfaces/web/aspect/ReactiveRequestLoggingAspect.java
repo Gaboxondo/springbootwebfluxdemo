@@ -67,17 +67,17 @@ public class ReactiveRequestLoggingAspect {
         stopWatch.start();
         try {
             result = joinPoint.proceed();
-            stopWatch.stop();
-            Long duration = stopWatch.getTotalTimeMillis();
             if (result instanceof Mono<?> monoOut) {
+                stopWatch.stop();
+                Long duration = stopWatch.getTotalTimeNanos();
                 return logMonoResult(joinPoint, clazz, logger, monoOut,duration, methodName );
             } else if (result instanceof Flux<?> fluxOut) {
-                return logFluxResult(joinPoint, clazz, logger, fluxOut,duration, methodName );
+                return logFluxResult(joinPoint, clazz, logger, fluxOut, methodName,stopWatch );
             } else {
                 return result;
             }
         } catch (Exception e) {
-            doOutputLogging( logger,null, ERROR, e,null,methodName);
+            doOutputLogging( logger,null, ERROR, e,null,methodName,null);
             throw e;
         }
     }
@@ -85,32 +85,36 @@ public class ReactiveRequestLoggingAspect {
     private <T, L> Mono<T> logMonoResult(ProceedingJoinPoint joinPoint, Class<L> clazz, Logger logger, Mono<T> monoOut,Long duration,String methodName) {
         return Mono.deferContextual(contextView ->
             monoOut.switchIfEmpty(Mono.<T>empty()
-                    .doOnSuccess(logOnEmptyConsumer(contextView, () -> doOutputLogging( logger, null,EMPTY_MONO, null,duration,methodName))))
-                    .doOnEach(logOnNext(responseObject -> doOutputLogging( logger, responseObject,OK, null,duration,methodName)))
-                    .doOnEach(logOnError(exception -> doOutputLogging( logger, null,null, exception,null,methodName)))
-                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger, null,CANCEL, null,null,methodName)))
+                    .doOnSuccess(logOnEmptyConsumer(contextView, () -> doOutputLogging( logger, null,EMPTY_MONO, null,duration,methodName,null))))
+                    .doOnEach(logOnNext(responseObject -> doOutputLogging( logger, responseObject,OK, null,duration,methodName,null)))
+                    .doOnEach(logOnError(exception -> doOutputLogging( logger, null,null, exception,null,methodName,null)))
+                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger, null,CANCEL, null,null,methodName,null)))
         );
     }
 
-    private <T> Flux<T> logFluxResult(ProceedingJoinPoint joinPoint, Class<?> clazz, Logger logger, Flux<T> fluxOut,Long duration,String methodName) {
+    private <T> Flux<T> logFluxResult(ProceedingJoinPoint joinPoint, Class<?> clazz, Logger logger, Flux<T> fluxOut,String methodName,StopWatch stopWatch) {
         return Flux.deferContextual(contextView ->
             fluxOut
                 .switchIfEmpty(Flux.<T>empty()
-                    .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, EMPTY_FLUX, null, duration,methodName))))
-                    .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, COMPLETE_FLUX, null,duration,methodName)))
-                    .doOnEach(logOnNext(data -> doOutputLoggingDebugForFluxData( logger, data, duration, methodName)))
-                    .doOnEach(logOnError(exception -> doOutputLogging( logger,null, null, exception,null,methodName)))
-                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(logger,null, CANCEL, null,null,methodName)))
+                    .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, EMPTY_FLUX, null, null,methodName,stopWatch))))
+                    .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, COMPLETE_FLUX, null,null,methodName,stopWatch)))
+                    .doOnEach(logOnNext(data -> doOutputLoggingDebugForFluxData( logger, data, stopWatch, methodName)))
+                    .doOnEach(logOnError(exception -> doOutputLogging( logger,null, null, exception,null,methodName,null)))
+                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(logger,null, CANCEL, null,null,methodName,null)))
         );
     }
 
-    private <T> void doOutputLogging( final Logger logger, final T responsePart,String result, final Throwable exception, Long duration,String methodName) {
+    private <T> void doOutputLogging( final Logger logger, final T responsePart,String result, final Throwable exception, Long duration,String methodName,StopWatch stopWatch) {
         if(exception == null) {
-            if(duration == null){
-                duration = 0L;
+            Long finalDuration = 0L;
+            if(stopWatch != null){
+                stopWatch.stop();
+                finalDuration = stopWatch.getTotalTimeNanos();
             }
-
-            logger.info( "Controller-direction=out method-name={} result={} duration={}ms", methodName, result, duration );
+            if(duration != null){
+                finalDuration = duration;
+            }
+            logger.info( "Controller-direction=out method-name={} result={} duration={}ns", methodName, result, finalDuration );
         }
         else {
             if(exception instanceof ControlledErrorException){
@@ -124,13 +128,13 @@ public class ReactiveRequestLoggingAspect {
         }
     }
 
-    private <T> void doOutputLoggingDebugForFluxData( final Logger logger, final T responsePart, Long duration, String methodName) {
+    private <T> void doOutputLoggingDebugForFluxData( final Logger logger, final T responsePart, StopWatch stopWatch, String methodName) {
         if (responsePart != null ) {
-            if (duration == null) {
-                duration = 0L;
-            }
-            logger.debug( "Controller-direction=out-flux-part method-name={} bodyResponsePart={} duration={}ms", methodName,
-                responsePart.toString(), duration );
+            stopWatch.stop();
+
+            logger.debug( "Controller-direction=out-flux-part method-name={} bodyResponsePart={} acumulated-duration={}ns", methodName,
+                responsePart.toString(), stopWatch.getTotalTimeNanos() );
+            stopWatch.start();
         }
     }
     //-----------------------------------------------------------------------------------------------
