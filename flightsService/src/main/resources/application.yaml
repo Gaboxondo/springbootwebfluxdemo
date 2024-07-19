@@ -10,3 +10,9 @@ spring:
       username: flightsdbuser
       password: sa
       database: flightsdb
+logging:
+  level:
+    root: ERROR
+    org.springframework.boot.web.embedded.netty.NettyWebServer: INFO
+    org.mongodb.driver.cluster: INFO
+    com.mashosoft.flightsService: DEBUG
