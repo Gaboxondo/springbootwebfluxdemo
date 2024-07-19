@@ -95,7 +95,7 @@ public class ReactiveRequestLoggingAspect {
         return Flux.deferContextual(contextView ->
             fluxOut
                 .switchIfEmpty(Flux.<T>empty()
-                    .doOnEach(logOnNext(data -> doOutputLoggingDebugForFluxData(joinPoint, clazz, logger, data, duration)))
+                    .doOnEach(logOnNext(data -> doOutputLoggingDebugForFluxData( logger, data, duration, methodName)))
                     .doOnEach(logOnError(exception -> doOutputLogging( logger,null, null, exception,null,methodName)))
                     .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, EMPTY_FLUX, null, duration,methodName))))
                     .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging( logger,null, COMPLETE_FLUX, null,duration,methodName)))
@@ -165,12 +165,12 @@ public class ReactiveRequestLoggingAspect {
         }
     }
 
-    private <T> void doOutputLoggingDebugForFluxData(final ProceedingJoinPoint joinPoint, final Class<?> clazz, final Logger logger, final T responsePart, Long duration) {
+    private <T> void doOutputLoggingDebugForFluxData( final Logger logger, final T responsePart, Long duration, String methodName) {
         if (responsePart != null ) {
             if (duration == null) {
                 duration = 0L;
             }
-            logger.debug( "Controller-direction=out-flux-part method-name={} bodyResponsePart={} duration={}ms", clazz.getSimpleName(),
+            logger.debug( "Controller-direction=out-flux-part method-name={} bodyResponsePart={} duration={}ms", methodName,
                 responsePart.toString(), duration );
         }
     }
