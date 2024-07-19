@@ -1,7 +1,9 @@
 package com.mashosoft.flightsService.interfaces.web.aspect;
 
 import com.mashosoft.flightsService.config.exceptionHandling.model.exception.ControlledErrorException;
+import com.mashosoft.flightsService.config.requestcontext.ReactiveRequestContextHolder;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
@@ -20,6 +22,7 @@ import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Aspect
@@ -42,8 +45,10 @@ public class ReactiveRequestLoggingAspect {
 
         Class<?> clazz = joinPoint.getTarget().getClass();
         Logger logger = LoggerFactory.getLogger(clazz);
-        String methodName = joinPoint.getSignature().getDeclaringTypeName();
-        logger.info("controller-direction=in method-name={}", clazz.getSimpleName());
+        Signature signature = joinPoint.getSignature();
+        String methodName = signature.getName();
+
+        logger.info("controller-direction=in method-name={}", methodName);
 
         Object result;
         Throwable exception = null;
@@ -55,14 +60,14 @@ public class ReactiveRequestLoggingAspect {
             stopWatch.stop();
             Long duration = stopWatch.getTotalTimeMillis();
             if (result instanceof Mono<?> monoOut) {
-                return logMonoResult(joinPoint, clazz, logger, monoOut,duration,methodName);
+                return logMonoResult(joinPoint, clazz, logger, monoOut,duration, methodName );
             } else if (result instanceof Flux<?> fluxOut) {
-                return logFluxResult(joinPoint, clazz, logger, fluxOut,duration,methodName);
+                return logFluxResult(joinPoint, clazz, logger, fluxOut,duration, methodName );
             } else {
                 return result;
             }
         } catch (Exception e) {
-            doOutputLogging(joinPoint, clazz, logger, "[error]", e,null);
+            doOutputLogging(joinPoint, clazz, logger, "[ERROR]", e,null,methodName);
             throw e;
         }
     }
@@ -70,10 +75,10 @@ public class ReactiveRequestLoggingAspect {
     private <T, L> Mono<T> logMonoResult(ProceedingJoinPoint joinPoint, Class<L> clazz, Logger logger, Mono<T> monoOut,Long duration,String methodName) {
         return Mono.deferContextual(contextView ->
             monoOut.switchIfEmpty(Mono.<T>empty()
-                    .doOnSuccess(logOnEmptyConsumer(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[empty]", null,duration))))
-                    .doOnEach(logOnNext(v -> doOutputLogging(joinPoint, clazz, logger, v, null,duration)))
-                    .doOnEach(logOnError(e -> doOutputLogging(joinPoint, clazz, logger, null, e,null)))
-                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[CANCEL]", null,null)))
+                    .doOnSuccess(logOnEmptyConsumer(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[empty]", null,duration,methodName))))
+                    .doOnEach(logOnNext(v -> doOutputLogging(joinPoint, clazz, logger, v, null,duration,methodName)))
+                    .doOnEach(logOnError(e -> doOutputLogging(joinPoint, clazz, logger, null, e,null,methodName)))
+                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[CANCEL]", null,null,methodName)))
         );
     }
 
@@ -81,11 +86,11 @@ public class ReactiveRequestLoggingAspect {
         return Flux.deferContextual(contextView ->
             fluxOut
                 .switchIfEmpty(Flux.<T>empty()
-                    .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[empty]", null, duration))))
+                    .doOnComplete(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[empty]", null, duration,methodName))))
                     .doOnEach(logOnNext(v -> doOutputLoggingDebug(joinPoint, clazz, logger, v, duration)))
-                    .doOnEach(logOnError(e -> doOutputLogging(joinPoint, clazz, logger, null, e,null)))
-                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[CANCEL]", null,null)))
-                    .doOnComplete( logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[COMPLETE]", null,duration)) )
+                    .doOnEach(logOnError(e -> doOutputLogging(joinPoint, clazz, logger, null, e,null,methodName)))
+                    .doOnCancel(logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[CANCEL]", null,null,methodName)))
+                    .doOnComplete( logOnEmptyRunnable(contextView, () -> doOutputLogging(joinPoint, clazz, logger, "[COMPLETE]", null,duration,methodName)) )
         );
     }
 
@@ -131,22 +136,22 @@ public class ReactiveRequestLoggingAspect {
         };
     }
 
-    private <T> void doOutputLogging(final ProceedingJoinPoint joinPoint, final Class<?> clazz, final Logger logger, final T responsePart, final Throwable exception, Long duration) {
+    private <T> void doOutputLogging(final ProceedingJoinPoint joinPoint, final Class<?> clazz, final Logger logger, final T responsePart, final Throwable exception, Long duration,String methodName) {
         if(responsePart != null && exception == null) {
             if(duration == null){
                 duration = 0L;
             }
-            String finalResult = "[OK]";
+            String finalResult = responsePart.toString();
             logger.info( "Controller-direction=out method-name={} result={} duration={}ms", clazz.getSimpleName(), finalResult, duration );
         }
         if(responsePart != null && exception != null) {
             if(exception instanceof ControlledErrorException){
                 ControlledErrorException controlledErrorException = (ControlledErrorException) exception;
                 String finalResult = "[CONTROLLEDERROR]";
-                logger.info( "Controller-direction=out method-name={} result={} errorCode={} errorMessage={}", clazz.getSimpleName(), finalResult, controlledErrorException.getErrorCode(), controlledErrorException.getErrorMessage() );
+                logger.info( "Controller-direction=out method-name={} result={} errorCode={} errorMessage={}", methodName, finalResult, controlledErrorException.getErrorCode(), controlledErrorException.getErrorMessage() );
             } else {
                 String finalResult = "[BUG]";
-                logger.info( "Controller-direction=out method-name={} result={} exceptionType={}, errorMessage={}", clazz.getSimpleName(), finalResult, exception.getClass().toString(), exception.getMessage() );
+                logger.info( "Controller-direction=out method-name={} result={} exceptionType={}, errorMessage={}", methodName, finalResult, exception.getClass().toString(), exception.getMessage() );
             }
         }
     }

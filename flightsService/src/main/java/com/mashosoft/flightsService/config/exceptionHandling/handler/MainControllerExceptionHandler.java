@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
 
 @ControllerAdvice
 @RestController
@@ -48,6 +49,15 @@ public class MainControllerExceptionHandler {
             appname = "AppNameNotSet";
         }
         return new ControlledErrorResponseDTO( "uw.error." + appname + ".http.arguments.00", "Not Valid Argument " + ex.getParameter());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ControlledErrorResponseDTO handleException(NoResourceFoundException ex) {
+        if(appname == null || appname.isBlank()){
+            appname = "AppNameNotSet";
+        }
+        return new ControlledErrorResponseDTO( "uw.error." + appname + ".http.service.01", "Not found service " + ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

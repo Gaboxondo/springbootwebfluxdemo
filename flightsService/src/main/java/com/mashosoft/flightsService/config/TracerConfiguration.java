@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.server.WebFilter;
 
+//FIXME:Doesnt workvery well
 @Configuration(proxyBeanMethods = false)
 public class TracerConfiguration {
     @Bean
