@@ -6,7 +6,7 @@
             <Pattern>%d{ISO8601} %level service=flights-service %X{traceId:-} class=%logger %msg%n%throwable</Pattern>
         </layout>
     </appender>
-    <logger name="com.mashosoft.flightsService" level="DEBUG"
+    <logger name="com.mashosoft.flightsService" level="INFO"
             additivity="false">
         <appender-ref ref="Console"/>
     </logger>

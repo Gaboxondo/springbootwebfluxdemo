@@ -21,7 +21,7 @@ import java.time.Duration;
 @AllArgsConstructor
 public class TestAspectController {
 
-    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/test")
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/empty")
     @Operation(description = "test Empty")
     @ResponseStatus(HttpStatus.OK)
     public Mono<Void> testEmpty(){
@@ -35,21 +35,21 @@ public class TestAspectController {
         return Flux.just( 1,2,3,4,5,6,7,8,9,10 ).delayElements( Duration.ofSeconds( 1 ) );
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/errorMono")
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/error-Mono-controlled")
     @Operation(description = "test delay for cancel")
     @ResponseStatus(HttpStatus.OK)
     public Mono<Integer> errorMono(){
         throw new ControlledErrorException( ErrorCodes.DEPARTURE_CODE_NULL, "Error");
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/errorFlux")
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/error-Flux-controlled")
     @Operation(description = "test delay for cancel")
     @ResponseStatus(HttpStatus.OK)
     public Flux<Integer> errorFlux(){
         throw new ControlledErrorException( ErrorCodes.DEPARTURE_CODE_NULL, "Error");
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/errorMonoBug")
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/error-Mono-Bug")
     @Operation(description = "mono error Bug")
     @ResponseStatus(HttpStatus.OK)
     public Mono<Integer> monoBug(){
@@ -58,7 +58,21 @@ public class TestAspectController {
         return Mono.just( 1 );
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/errorMonoAsError")
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/ok-Mono")
+    @Operation(description = "MONO OK")
+    @ResponseStatus(HttpStatus.OK)
+    public Mono<Integer> monoOK(){
+        return Mono.just( 12394 );
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/ok-Flux")
+    @Operation(description = "FLUX OK")
+    @ResponseStatus(HttpStatus.OK)
+    public Flux<Integer> FluxOk(){
+        return Flux.just( 1,2,3,4,5 );
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE,value = "/error-Mono-As-Error")
     @Operation(description = "test delay for cancel")
     @ResponseStatus(HttpStatus.OK)
     public Mono<Integer> errorMonoError(){
