@@ -147,7 +147,7 @@ public class ReactiveRequestLoggingAspect {
         if(responsePart != null && exception != null) {
             if(exception instanceof ControlledErrorException){
                 ControlledErrorException controlledErrorException = (ControlledErrorException) exception;
-                String finalResult = "[CONTROLLEDERROR]";
+                String finalResult = "[CONTROLLED-ERROR]";
                 logger.info( "Controller-direction=out method-name={} result={} errorCode={} errorMessage={}", methodName, finalResult, controlledErrorException.getErrorCode(), controlledErrorException.getErrorMessage() );
             } else {
                 String finalResult = "[BUG]";
