@@ -146,14 +146,14 @@ public class ReactiveRequestLoggingAspect {
     }
 
     private <T> void doOutputLogging( final Logger logger, final T responsePart,String result, final Throwable exception, Long duration,String methodName) {
-        if(responsePart != null && exception == null) {
+        if(exception == null) {
             if(duration == null){
                 duration = 0L;
             }
 
             logger.info( "Controller-direction=out method-name={} result={} duration={}ms", methodName, result, duration );
         }
-        if(responsePart != null && exception != null) {
+        else {
             if(exception instanceof ControlledErrorException){
                 ControlledErrorException controlledErrorException = (ControlledErrorException) exception;
                 String finalResult = "[CONTROLLED-ERROR]";
